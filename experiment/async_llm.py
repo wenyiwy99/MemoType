@@ -4,8 +4,8 @@ from time import sleep
 
 
 async def create_completion(session, prompt, temp, model):
-    API_KEY = 'sk-kIRCfdpRDNhH99on9eE2F839Cf2d4181A298Ba671a985773'
-    BASE_URL = "https://us.vveai.com/v1/" 
+    API_KEY = 'your api key'
+    BASE_URL = "your base url" 
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json",
