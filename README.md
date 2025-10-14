@@ -33,6 +33,6 @@ python3 /MemoType/experiment/2-construct_emb.py --data locomo
 python3 /MemoType/experiment/2-query_route --data locomo
 python3 /MemoType/experiment/3-retrieve --data locomo
 python3 /MemoType/experiment/4-generate --data locomo
-# The numbers in front of the filenames indicate the order of running.
+####### The numbers in front of the filenames indicate the order of running.
 
 
