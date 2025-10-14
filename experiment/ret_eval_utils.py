@@ -45,7 +45,7 @@ def evaluate_retrieval_turn2session(rankings, correct_docs, corpus_ids, k=10):
 
     return evaluate_retrieval(rankings, correct_docs, corpus_ids, k=effective_k)
 
-def retrieval_csv_save(csv_path, retrieval_res):
+def retrieval_res_save(csv_path, retrieval_res):
     k_values = [1, 3, 5, 10]
     header = ["Metric"] + [f"@{k}" for k in k_values]
 

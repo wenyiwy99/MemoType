@@ -3,9 +3,9 @@ import aiohttp
 from time import sleep
 
 
-async def create_completion(session, prompt, temp, model):
-    API_KEY = 'sk-kIRCfdpRDNhH99on9eE2F839Cf2d4181A298Ba671a985773'
-    BASE_URL = "https://us.vveai.com/v1/" 
+async def create_completion(session, prompt, model, temp, topp):
+    API_KEY = 'your api key'
+    BASE_URL = "your base url" 
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json",
@@ -18,7 +18,7 @@ async def create_completion(session, prompt, temp, model):
                     "model": model,
                     "max_tokens":4000,
                     "temperature": temp,
-                    "top_p": 1,
+                    "top_p": topp,
                     "messages": [{"role": "user", "content": prompt}],
                 },
                 headers=headers
@@ -37,9 +37,9 @@ async def create_completion(session, prompt, temp, model):
             print(f"Error: {e}", flush=True)
 
 
-async def run_async(prompts, temp=0, model='gpt-4o-mini'):
+async def run_async(prompts, model='gpt-4o-mini', temp=0, topp=1):
     async with aiohttp.ClientSession() as session:
-        tasks = [create_completion(session, prompt, temp, model) for prompt in prompts]
+        tasks = [create_completion(session, prompt, model, temp, topp ) for prompt in prompts]
         responses = await asyncio.gather(*tasks)
     return responses
 

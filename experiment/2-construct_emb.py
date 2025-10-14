@@ -1,8 +1,8 @@
 # Copyright (c) 2024 Microsoft
 # Licensed under The MIT License [see LICENSE for details]
 """
-File: memory_route.py
-Description: route the memory to its corresponding type.
+File: construct_emb.py
+Description: construct the embedding of the memory.
 """
 
 import os
@@ -11,12 +11,12 @@ import json
 import torch
 import argparse
 from tqdm import tqdm
-from data_utils import load_corpus
 from torch.utils.data import DataLoader
+from data_utils import load_data, load_session
 from transformers import AutoModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 
 ELEMENTS = ["T", "P", "L"]
@@ -44,7 +44,7 @@ class EmbeddingModel():
             with torch.no_grad():
                 all_docs_vectors = []
                 dataloader = DataLoader(expansion, batch_size=64, shuffle=False)
-                for batch in tqdm(dataloader):
+                for batch in dataloader:
                     inputs = self.tokenizer(batch, padding=True, truncation=True, return_tensors='pt')
                     inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
                     outputs = self.model(**inputs)
@@ -62,29 +62,29 @@ class EmbeddingModel():
 
 def main(data_name, retriever):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_path = os.path.join(base_dir, f'data/process_data/{data_name}/{data_name}_with_fm.json')
-    route_res_path = os.path.join(base_dir, f"data/process_data/{data_name}/{data_name}_memory_routed.jsonl")
+    data_path = os.path.join(base_dir, f'data/process_data/{data_name}.json')
+    route_res_path = os.path.join(base_dir, f"data/process_data/{data_name}/{data_name}_memory_routed.json")
     save_path = os.path.join(base_dir, f"data/data_emb/{data_name}/{data_name}_{retriever}.pt")
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-    session_dicts, em_dicts = load_corpus(data_path, route_res_path)
+    emb_dicts = {}
+    mem_route_dicts = load_data(route_res_path)
+    session_dicts, _ = load_session(data_path)
     model = EmbeddingModel(retriever)
 
-    emb_dict = {}
-    for sess_id in session_dicts.keys():
-        emb_dict[sess_id] = {}
+    for sess_id in tqdm(session_dicts.keys()):
+        emb_dicts[sess_id] = {}
         sess = session_dicts[sess_id]
-        em_info = em_dicts[sess_id]['EM_Info']
-        emb_dict[sess_id]['sess'] = model.get_emb(sess)
+        em_info = mem_route_dicts[sess_id]['EM_Info']
+        if sess: emb_dicts[sess_id]['sess'] = model.get_emb(sess)
         for ele in ELEMENTS:
-            emb_dict[sess_id][ele] = model.get_emb(em_info[ele])
+            if em_info[ele]: emb_dicts[sess_id][ele] = model.get_emb(em_info[ele])
 
-    torch.save(emb_dict, save_path)
+    torch.save(emb_dicts, save_path)
     
-
             
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="route the memory to its corresponding type.")
+    parser = argparse.ArgumentParser(description="construct the embedding of memory.")
     parser.add_argument('--data', default='locomo')
     parser.add_argument('--retriever', default='contriever', 
                         choices=["contriever", "mpnet", "minilm","qaminilm"])

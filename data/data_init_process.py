@@ -1,7 +1,8 @@
-from tqdm import tqdm
-import json
-import hashlib
 import os
+import json
+from tqdm import tqdm
+
+
 base_path = os.path.dirname(os.path.abspath(__file__))
 def process_longmemeval(data='longmemeval_s'):
     output_path = os.path.join(base_path, f'process_data/{data}.json')

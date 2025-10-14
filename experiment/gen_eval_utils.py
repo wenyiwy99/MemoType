@@ -3,13 +3,9 @@
 
 import re
 import string
-from collections import Counter
-from typing import List
-
 import evaluate
-# import jieba
-# from fuzzywuzzy import fuzz
-# from rouge import Rouge
+from typing import List
+from collections import Counter
 
 
 def normalize_answer(s):
@@ -238,35 +234,36 @@ def evaluate_sim(pred_list, gt_list, truncate_pred=True, truncate_gt=False):
         gt_list = gt_list_truncated
 
     bleu = evaluate.load("bleu")
-    rouge = evaluate.load("rouge")
     bertscore = evaluate.load("bertscore")
     bleu_results = bleu.compute(predictions=pred_list, references=gt_list)
-    rouge_results = rouge.compute(predictions=pred_list, references=gt_list)
     bertscore_results = bertscore.compute(
         predictions=pred_list, references=gt_list, lang="en"
     )
-    p, r, f1 = [bertscore_results[k] for k in ["precision", "recall", "f1"]]
+    bert_f1 = bertscore_results["f1"]
     evs = [
-        bleu_results["bleu"],
-        *[rouge_results[k] for k in ["rouge1", "rouge2", "rougeL", "rougeLsum"]],
-        sum(p) / len(p),
-        sum(r) / len(r),
-        sum(f1) / len(f1),
+        bleu_results["bleu"] * 100,
+        sum(bert_f1) / len(bert_f1) * 100
     ]
     metrics = {}
     for i, metric_name in enumerate(
         [
-            "bleu",
-            "rouge1",
-            "rouge2",
-            "rougeL",
-            "rougeLsum",
-            "bertscore_precision",
-            "bertscore_recall",
-            "bertscore_f1",
+            "Bleu",
+            "Bertscore",
         ]
     ):
         metrics[metric_name] = evs[i]
-    # print(",".join([f"{ii * 100:.2f}" for ii in evs]))
 
     return metrics
+
+def gen_res_save(pred_all, answer_all, llm_results, csv_path):
+    gen_res = evaluate_sim(pred_all, answer_all, truncate_pred=False)
+    gen_res['GPT4J'] = sum(llm_results) /len(llm_results) *100
+    
+    ordered_keys = ['GPT4J', 'Bleu', 'Bertscore']
+    ordered_gen_res = {key: gen_res[key] for key in ordered_keys}
+    print(ordered_gen_res)
+    import csv
+    with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(ordered_gen_res.keys())
+        writer.writerow(ordered_gen_res.values())

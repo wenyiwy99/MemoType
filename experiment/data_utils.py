@@ -20,19 +20,16 @@ def load_data(load_path):
                 data.append(json.loads(line.strip()))
     elif os.path.splitext(os.path.basename(load_path))[1] == ".json":
         data = json.load(open(load_path))
-        if isinstance(data, dict):
-            data = list(data.values())
-    else:
-        raise NotImplementedError()
     return data
 
-def setup_memory():
+def memory_setup():
     class_res = {mem_type: [] for mem_type in MEM_TYPES}
     class_res["EM_Info"] = {element:[] for element in ELEMENTS}
     class_res['EM_Index'] = []
     return class_res
 
-def load_session(load_path, save_path):
+
+def load_session(load_path):
     data = load_data(load_path)
     print(f"number of data: {len(data)}")
 
@@ -42,45 +39,7 @@ def load_session(load_path, save_path):
             if id not in session_dicts:
                 session_dicts[id] = session
                 session_ids.append(id)
-
-    if os.path.exists(save_path):
-        with open(save_path, "r", encoding="utf-8") as f:
-            for line in f:
-                classified_dict = json.loads(line.strip())
-                for key in classified_dict.keys():
-                    session_ids.remove(key)
     return session_dicts, session_ids
-
-def load_route_res(data_path, route_res_path):
-    data = load_data(data_path)
-    print(f"number of data: {len(data)}")
-
-    mem_route_dict = {}
-    with open(route_res_path, "r", encoding="utf-8") as f:
-        for line in f:
-            route_dict = json.loads(line.strip())
-            mem_route_dict.update(route_dict)
-    return data, mem_route_dict
-
-
-def load_corpus(load_path, route_res_path):
-    data = load_data(load_path)
-    print(f"number of data: {len(data)}")
-
-    session_dicts, session_ids = {}, []
-    for entry in tqdm(data):
-        for id, session in entry['sessions'].items():
-            if id not in session_dicts:
-                session_dicts[id] = session
-                session_ids.append(id)
-
-    em_dicts = {}
-    with open(route_res_path, "r", encoding="utf-8") as f:
-        for line in f:
-            route_dict = json.loads(line.strip())
-            em_dicts.update(route_dict)
-
-    return session_dicts, em_dicts
 
 def memory_route(texts, model, tokenizer, device, threshold=0.5):
     results = []
@@ -187,32 +146,6 @@ def process_em(data, types):
     return event_list, event_index_list
 
 
-def hybrid_query_expansion(data):
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    keyword_prompt_path = os.path.join(base_dir, 'model/instructions/keyword_extract.md')
-    em_q_prompt_path = os.path.join(base_dir, 'model/instructions/query_event_extract.md')
-    with open(keyword_prompt_path, 'r', encoding='utf-8') as f:
-        key_prompt = f.read()
-    with open(em_q_prompt_path, 'r', encoding='utf-8') as f:
-        em_query_prompt = f.read()
-
-    prompt_list, em_prompt_list, key_list = [], [], []
-    for sample in data:
-        qa_list = sample['qa']
-        for qa in qa_list:
-            if qa['retrieval_type'] == 'PM': prompt_list.append(key_prompt.format(query=qa['question']))
-            if qa['retrieval_type'] == 'EM': em_prompt_list.append(em_query_prompt.format(text_to_be_processed=qa['question']))
-    pm_index = len(prompt_list)
-    prompt_list.extend(em_prompt_list)
-    output_list = asyncio.run(run_async(prompt_list))
-    pm_list, em_list = output_list[:pm_index], output_list[pm_index:]
-    for key in pm_list:
-        keyword = key.split(",")[:3]
-        keyword = ",".join(keyword)
-        key_list.append(keyword)
-    event_list = extract_event_query(em_list)
-    return key_list, event_list
-
 def retrieval_res_setup():
     retrieval_res = {}
     for k in [1, 3, 5, 10]:
@@ -275,11 +208,7 @@ def get_answer(ans):
             ans = ans.split(cut_word)[0]
     return ans
 
-def load_prompt(save_path):
-    if os.path.exists(save_path):
-        with open(save_path, 'w') as file:
-            pass  
-    
+def load_prompt():   
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     llm_judge_path = os.path.join(base_dir, f"model/instructions/llm_judge.md")
     memory_prun_path = os.path.join(base_dir, f"model/instructions/memory_prun.md")
@@ -304,3 +233,31 @@ def load_gen_corpus(sample):
             else:
                 corpus.append(sess[i])
     return corpus
+
+def reciprocal_rank_fusion(rank_lists, k=60):
+    """
+    Implements the Reciprocal Rank Fusion (RRF) algorithm.
+
+    Parameters:
+        rank_lists (list of list of str): A list of ranked lists. Each inner list contains document IDs ranked in descending order of relevance.
+        k (int): The constant parameter for RRF to adjust the impact of rank. Default is 60.
+
+    Returns:
+        dict: A dictionary mapping document IDs to their RRF scores, sorted in descending order of scores.
+    """
+
+    # Dictionary to store the accumulated RRF scores for each document
+    rrf_scores = {}
+
+    for rank_list in rank_lists:
+        for rank, doc_id in enumerate(rank_list):
+            # Calculate RRF score contribution for this document
+            score = 1 / (k + rank + 1)  # rank is 0-based, so add 1
+            if doc_id in rrf_scores:
+                rrf_scores[doc_id] += score
+            else:
+                rrf_scores[doc_id] = score
+
+    # Sort documents by RRF score in descending order
+    sorted_docs = [doc_id for doc_id, _ in sorted(rrf_scores.items(), key=lambda item: (item[1], doc_id), reverse=True)]
+    return sorted_docs

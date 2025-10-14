@@ -1,0 +1,21 @@
+name: memotype
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - numpy=1.26.4
+  - pandas=2.2.3
+  - pip=25.0
+  - python=3.9.21
+  - tqdm=4.67.1
+  - pip:
+      - evaluate==0.4.3
+      - bert-score==0.3.13
+      - scikit-learn==1.6.1
+      - scipy==1.13.1
+      - sentence-transformers==4.0.1
+      - tiktoken==0.7.0
+      - tokenizers==0.20.3
+      - torch==2.5.1
+      - torchvision==0.20.1
+      - transformers==4.45.2

@@ -98,14 +98,21 @@ def main(num_labels, epochs, batch_size, learning_rate):
     optimizer = AdamW(model.parameters(), lr=learning_rate)
 
     print("Starting training...")
+    best_loss = float('inf') 
     for epoch in range(epochs):
         train_loss = train_epoch(model, loader, optimizer, device)
 
-        print(f"Epoch {epoch + 1}/{batch_size}")
+        print(f"Epoch {epoch + 1}/{epochs}")
         print(f"Train Loss: {train_loss:.4f}")
+        if train_loss < best_loss:
+            best_loss = train_loss
+            best_model_state = model.state_dict()
 
-    model.save_pretrained(save_path)
-    tokenizer.save_pretrained(save_path)
+    if best_model_state is not None:
+        print("Saving best model...")
+        model.load_state_dict(best_model_state)  
+        model.save_pretrained(save_path)
+        tokenizer.save_pretrained(save_path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="training a basic BERT model as a router to classify memories")
