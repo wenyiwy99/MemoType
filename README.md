@@ -1,6 +1,6 @@
 # MemType
 
-An official source code for paper Memory Type Matters: Enhancing Long-Term Memory in Large Language Models with Hybrid Strategies.
+An official source code for the paper Memory Type Matters: Enhancing Long-Term Memory in Large Language Models with Hybrid Strategies.
 
 ### TriMEM Benchmark
   TriMEM is a memory multi-classification dataset we constructed, which categorizes memory into: Episodic Memory, Personal Semantic Memory, and General Semantic Memory, with binary labels (0 or 1) indicating whether the memory belongs to each type.
@@ -12,9 +12,9 @@ An official source code for paper Memory Type Matters: Enhancing Long-Term Memor
 
 
 ### Data Process
-The LoCoMo datasets have been downloaded. LongMemEval-S and LongMemEval-M can be downloaded from https://github.com/xiaowu0162/LongMemEval
+The LoCoMo datasets have been downloaded and processed. LongMemEval-S and LongMemEval-M datasets can be downloaded from https://github.com/xiaowu0162/LongMemEval
 
-Put the LongMemEval-S and LongMemEval-M dataset in `data/origin_data/`, and  run:
+Put the LongMemEval-S and LongMemEval-M datasets in `data/origin_data/`, and  run:
 python data_init_process.py
 
 The processed data will be available in `data/process_data/`
