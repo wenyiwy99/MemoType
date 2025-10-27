@@ -15,6 +15,7 @@ An official source code for the paper Memory Type Matters: Enhancing Long-Term M
 The LoCoMo datasets have been downloaded and processed. LongMemEval-S and LongMemEval-M datasets can be downloaded from https://github.com/xiaowu0162/LongMemEval
 
 Put the LongMemEval-S and LongMemEval-M datasets in `data/origin_data/`, and  run:
+
 python data_init_process.py
 
 The processed data will be available in `data/process_data/`
