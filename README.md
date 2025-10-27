@@ -28,11 +28,17 @@ Run the following commands to reproduce our results:
 
 
 python3 /MemoType/experiment/0-router_training.py 
+
 python3 /MemoType/experiment/1-memory_route.py --data locomo
+
 python3 /MemoType/experiment/2-construct_emb.py --data locomo
+
 python3 /MemoType/experiment/2-query_route --data locomo
+
 python3 /MemoType/experiment/3-retrieve --data locomo
+
 python3 /MemoType/experiment/4-generate --data locomo
+
 ####### The numbers in front of the filenames indicate the order of running.
 
 
