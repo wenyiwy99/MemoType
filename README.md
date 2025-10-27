@@ -16,7 +16,7 @@ The LoCoMo datasets have been downloaded and processed. LongMemEval-S and LongMe
 
 Put the LongMemEval-S and LongMemEval-M datasets in `data/origin_data/`, and  run:
 
-python data_init_process.py
+python3 data_init_process.py
 
 The processed data will be available in `data/process_data/`
 
